@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Noel Trang Trọng 🎄</title>
+<style>
+html,body{margin:0;background:#000;overflow:hidden}
+canvas{display:block}
+#hint{
+ position:fixed;bottom:22px;width:100%;
+ text-align:center;color:rgba(255,255,255,.7);
+ font-family:Georgia,serif;letter-spacing:2px
+}
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+<div id="hint">Chạm vào ánh sáng ✨</div>
+
+<!-- 🎶 NHẠC NOEL -->
+<audio id="bgm" loop>
+  <source src="music.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+const c=document.getElementById("c"),ctx=c.getContext("2d");
+resize();onresize=resize;
+function resize(){c.width=innerWidth;c.height=innerHeight}
+const C=()=>({x:c.width/2,y:c.height/2});
+
+let stage=0,leaf=0,trunk=0,openGift=false;
+let snow=[],decor=[],snowmanAlpha=0;
+let santaX=-500;
+let letterAnim=0;
+let musicPlayed=false;
+
+for(let i=0;i<220;i++)
+ snow.push({x:Math.random()*c.width,y:Math.random()*c.height,r:1+Math.random()*2,s:.4+Math.random()*.6});
+
+/* ===== CLICK ===== */
+c.onclick=e=>{
+ if(stage===0) stage=1;
+
+ let g={x:C().x,y:C().y+300};
+ if(stage>=2 && Math.abs(e.clientX-g.x)<65 && Math.abs(e.clientY-g.y)<65){
+  openGift=true;
+  if(!musicPlayed){
+   document.getElementById("bgm").play();
+   musicPlayed=true;
+  }
+ }
+};
+
+function glow(x,y,r,col,a=1){
+ ctx.save();ctx.globalAlpha=a;
+ ctx.shadowBlur=22;ctx.shadowColor=col;
+ ctx.fillStyle=col;ctx.beginPath();
+ ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+ ctx.restore();
+}
+
+/* ===== SNOW ===== */
+function drawSnow(){
+ snow.forEach(s=>{
+  s.y+=s.s;if(s.y>c.height)s.y=0;
+  glow(s.x,s.y,s.r,"white",.6);
+ });
+}
+
+/* ===== TREE ===== */
+function drawLeaves(){
+ leaf=Math.min(leaf+.008,1);
+ const top=C().y-280,bottom=C().y+160;
+ const h=(bottom-top)*leaf;
+ ctx.strokeStyle="#0b5d1e";
+ ctx.lineWidth=2;
+ ctx.shadowBlur=12;
+ ctx.shadowColor="#1fa64a";
+
+ for(let y=top;y<top+h;y+=6){
+  let t=(y-top)/(bottom-top);
+  let w=t*320;
+  ctx.beginPath();
+  ctx.moveTo(C().x-w/2,y);
+  ctx.lineTo(C().x+w/2,y);
+  ctx.stroke();
+
+  if(Math.random()<.02 && decor.length<100){
+   let r=Math.random();
+   decor.push({
+    x:C().x+(Math.random()-.5)*w,
+    y,
+    sx:Math.random()<.5?-200:c.width+200,
+    sy:Math.random()*c.height,
+    t:0,
+    c:r<.6?"gold":r<.85?"blue":"red"
+   });
+  }
+ }
+}
+
+function drawDecor(){
+ decor.forEach(d=>{
+  d.t=Math.min(d.t+.015,1);
+  let x=d.sx+(d.x-d.sx)*d.t;
+  let y=d.sy+(d.y-d.sy)*d.t;
+  glow(x,y,d.c==="red"?3:4,
+       d.c==="gold"?"#ffd700":d.c==="blue"?"#1e90ff":"#b11226");
+ });
+}
+
+function drawTrunk(){
+ trunk=Math.min(trunk+.02,1);
+ ctx.globalAlpha=trunk;
+ ctx.fillStyle="#4b2e1f";
+ ctx.fillRect(C().x-20,C().y+160,40,85);
+ ctx.globalAlpha=1;
+}
+
+function drawTopStar(){
+ ctx.save();
+ ctx.translate(C().x,C().y-300);
+ ctx.shadowBlur=40;
+ ctx.shadowColor="#ffd700";
+ ctx.fillStyle="#ffd700";
+ ctx.beginPath();
+ for(let i=0;i<5;i++){
+  ctx.lineTo(0,-26);
+  ctx.rotate(Math.PI/5);
+  ctx.lineTo(0,-13);
+  ctx.rotate(Math.PI/5);
+ }
+ ctx.fill();
+ ctx.restore();
+}
+
+/* ===== SANTA + REINDEER ===== */
+function drawSanta(){
+ santaX+=2.2;
+ if(santaX>c.width+300) return;
+
+ let y=C().y-360;
+ ctx.save();ctx.translate(santaX,y);
+
+ ctx.strokeStyle="#bbb";
+ ctx.beginPath();ctx.moveTo(-30,15);ctx.lineTo(-160,10);ctx.stroke();
+
+ ctx.fillStyle="#b11226";
+ ctx.fillRect(0,20,70,18);
+ ctx.strokeStyle="#ffd700";
+ ctx.beginPath();ctx.arc(8,40,22,Math.PI,Math.PI*1.8);ctx.stroke();
+
+ glow(35,5,16,"#c1121f");
+ ctx.fillStyle="black";ctx.fillRect(20,10,30,6);
+ ctx.fillStyle="#ffd700";ctx.fillRect(32,10,6,6);
+
+ glow(35,-20,12,"#ffe0bd");
+ glow(35,-12,14,"white");
+ glow(32,-22,2,"black");
+ glow(38,-22,2,"black");
+
+ glow(35,-36,10,"#c1121f");
+ glow(35,-46,6,"white");
+ glow(48,-40,3,"white");
+
+ for(let i=0;i<3;i++){
+  let rx=-120-i*45, ry=10;
+  glow(rx,ry,9,"#8b5a2b");
+  glow(rx+14,ry-4,5,"#8b5a2b");
+  glow(rx+18,ry-2,3,"#a97142");
+
+  ctx.strokeStyle="#5a3a1b";
+  ctx.beginPath();
+  ctx.moveTo(rx-4,ry+8);ctx.lineTo(rx-6,ry+18);
+  ctx.moveTo(rx+4,ry+8);ctx.lineTo(rx+6,ry+18);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(rx+12,ry-10);
+  ctx.lineTo(rx+8,ry-18);
+  ctx.lineTo(rx+14,ry-22);
+  ctx.stroke();
+ }
+ ctx.restore();
+}
+
+/* ===== GIFT ===== */
+function drawGift(){
+ let p={x:C().x,y:C().y+300};
+ ctx.shadowBlur=25;
+ ctx.shadowColor="#ffd700";
+ ctx.fillStyle="#8b0000";
+ ctx.fillRect(p.x-60,p.y-45,120,90);
+ ctx.fillStyle="#ffd700";
+ ctx.fillRect(p.x-6,p.y-45,12,90);
+ ctx.fillRect(p.x-60,p.y-6,120,12);
+ glow(p.x,p.y-60,7,"#ffd700");
+}
+
+/* ===== LETTER ===== */
+function letter(){
+ letterAnim=Math.min(letterAnim+.02,1);
+ const scale=.85+.15*letterAnim;
+ const w=560,h=240;
+
+ ctx.save();
+ ctx.translate(C().x,C().y);
+ ctx.scale(scale,scale);
+ ctx.globalAlpha=letterAnim;
+
+ ctx.shadowBlur=50;
+ ctx.shadowColor="#ffd700";
+ ctx.fillStyle="rgba(255,255,255,.95)";
+ ctx.beginPath();
+ ctx.roundRect(-w/2,-h/2,w,h,22);
+ ctx.fill();
+
+ ctx.fillStyle="#222";
+ ctx.font="30px Georgia";
+ ctx.textAlign="center";
+ ctx.fillText("Gửi em,",0,-40);
+ ctx.fillText("Em là phép màu đẹp nhất",0,0);
+ ctx.fillText("trong cuộc đời anh ❤️",0,45);
+
+ ctx.restore();
+}
+
+/* ===== LOOP ===== */
+function loop(){
+ ctx.clearRect(0,0,c.width,c.height);
+ drawSnow();
+
+ if(stage===0)
+  glow(C().x,C().y,10,"white",.9+Math.sin(Date.now()*.004)*.3);
+
+ if(stage>=1) drawLeaves();
+ if(leaf>=1) stage=2;
+
+ if(stage>=2){
+  drawDecor();
+  drawSanta();
+  drawTrunk();
+  drawTopStar();
+  drawGift();
+ }
+
+ if(openGift) letter();
+ requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
